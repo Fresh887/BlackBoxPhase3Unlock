@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>LS-417 · Black Box Recovery</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#07090a;--fg:#7dff9b;--dim:#3f7a50;--line:#1d3a26;--bad:#ff4d4d;--panel:#0c1210;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 ui-monospace,Menlo,Consolas,monospace}
+main{max-width:640px;margin:0 auto;padding:16px}
+.plate{border:1px solid var(--line);background:var(--panel);padding:12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tag{border:2px solid var(--bad);color:var(--bad);padding:0 8px;transform:rotate(-3deg);font-weight:700;letter-spacing:2px}
+h1{font-size:18px;margin:18px 0 4px}h2{font-size:14px;margin:22px 0 6px;color:var(--dim)}
+.mod{border:1px solid var(--line);background:var(--panel);padding:12px;margin:10px 0}
+.mod.lock{opacity:.4}.mod.ok{border-color:var(--fg)}
+input{width:100%;box-sizing:border-box;background:#000;color:var(--fg);border:1px solid var(--dim);padding:10px;font:inherit;margin:8px 0}
+button,a.btn{background:var(--fg);color:#000;border:0;padding:10px 14px;font:inherit;font-weight:700;display:inline-block;text-decoration:none;cursor:pointer}
+.bar{height:8px;background:var(--line)}.bar i{display:block;height:100%;background:var(--fg);transition:width .6s}
+.err{color:var(--bad);min-height:1.4em}.glitch{animation:g .4s}
+@keyframes g{0%,100%{transform:none}20%{transform:translateX(-6px);filter:hue-rotate(90deg)}60%{transform:translateX(6px)}}
+.dim{color:var(--dim)}.r{background:var(--fg);color:var(--fg)}u{text-decoration:none;color:var(--dim)}
+.card{border:1px dashed var(--dim);padding:10px;margin:8px 0}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid var(--line);padding:4px 8px;text-align:left}
+#t p{margin:4px 0}.hide{display:none}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:9;opacity:0}
+#fx.bad{background:radial-gradient(transparent 35%,rgba(255,77,77,.5));animation:fl .6s}
+#fx.good{background:radial-gradient(transparent 30%,rgba(125,255,155,.4));animation:fl 1s}
+#fx.good::after{content:"";position:absolute;left:0;right:0;height:3px;background:var(--fg);box-shadow:0 0 22px var(--fg);animation:sw .9s}
+@keyframes fl{0%{opacity:1}100%{opacity:0}}@keyframes sw{from{top:0}to{top:100%}}
+.shake{animation:sk .45s}@keyframes sk{0%,100%{transform:none}15%{transform:translateX(-9px);filter:hue-rotate(80deg)}35%{transform:translateX(9px)}55%{transform:translateX(-6px)}75%{transform:translateX(4px)}}
+.mod.new{animation:onl .9s}@keyframes onl{0%{box-shadow:0 0 0 var(--fg)}50%{box-shadow:0 0 26px var(--fg)}100%{box-shadow:none}}
+#go:not(.hide) .btn{animation:pl 1.2s infinite}@keyframes pl{50%{box-shadow:0 0 22px var(--fg);transform:scale(1.03)}}
+#fin:not(.hide){animation:onl 1.4s;border-color:var(--fg);font-size:17px}
+.bar i{box-shadow:0 0 10px var(--fg)}
+</style></head><body><main>
+<div id="fx"></div><div class="plate"><span>BLACK BOX · S/N LS-417</span><span class="tag">PHASE 2</span></div>
+<section id="v1"><h1>RECOVERY TERMINAL</h1><div class="bar"><i id="pb" style="width:0"></i></div><p id="pt" class="dim">Recovery 0%</p><div id="mods"></div>
+<p id="go" class="hide"><a class="btn" href="#transcript">OPEN FINAL TRANSCRIPT</a></p></section>
+<section id="v2" class="hide"><h1>TRANSCRIPT ANALYSIS</h1><div id="t"></div>
+<div id="af" class="hide"><input id="ai" placeholder="LAST WORD" autocomplete="off"><button id="ab">SUBMIT</button></div>
+<p class="err" id="ae"></p><div id="fin" class="card hide"></div><p id="rs" class="hide"><button id="rb">RESET PUZZLE</button></p><p><a href="#terminal" class="dim">← terminal</a></p></section>
+</main><script>
+const D={"w": [{"s": "v6zsUJhC+cP2d86uwh1IPg==", "h": "3fe67b4e1bb1e91d1d6c9d29f640b54956a0aee6cebc67550930d7c08a542117"}, {"s": "NQUabxi0Uvqq9il2s6wKTw==", "h": "546747a5a7d6698034f2d15aff303b1a8ab28156b3668975f4100bb0f38ef559"}, {"s": "E7dQ2ymszR0WJGNgvlkGbA==", "h": "5421f4f76fa7c66bf2b7a0a4e3d2ae56599925b2921e162556b701672bc45d70"}], "ps": "c5sQOzQkbgP2N2BijdrfFA==", "pi": "mjEXBuosS0w8IURK", "pc": "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", "fs": "NJEo8uWLyF/zmaQcGE3BiA==", "fi": "pdAGyAwUqMPvTE1u", "fc": "zFuneNkdoQDWx3LQs+fy+oKCrGdg6NGeN1HuOLhdRrnPixic/Pqtv3D12iOJdq1niQPEOzGd6DbU+G4rt8c4yzXy0mlfWKTNasKQ7UE3RhtJsRJEtHNbbSN9Xp032D3nBTOIeIkzhKQUkHxdAjz2"},IT=100000,E=new TextEncoder(),sub=crypto.subtle;
+const B=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const base=pw=>sub.importKey('raw',E.encode(pw),'PBKDF2',false,['deriveBits','deriveKey']);
+const hx=async(w,s)=>[...new Uint8Array(await sub.deriveBits({name:'PBKDF2',salt:B(s),iterations:IT,hash:'SHA-256'},await base(w),256))].map(x=>x.toString(16).padStart(2,'0')).join('');
+async function open(pw,s,iv,ct){const k=await sub.deriveKey({name:'PBKDF2',salt:B(s),iterations:IT,hash:'SHA-256'},await base(pw),{name:'AES-GCM',length:256},false,['decrypt']);return new TextDecoder().decode(await sub.decrypt({name:'AES-GCM',iv:B(iv)},k,B(ct)))}
+let S={w:[null,null,null],a:null};
+try{const x=JSON.parse(localStorage.getItem('bb_ls417'));if(x&&Array.isArray(x.w))S=x}catch(e){}
+const save=()=>{try{localStorage.setItem('bb_ls417',JSON.stringify(S))}catch(e){}};
+const $=i=>document.getElementById(i),N=["POWER","FLIGHT DATA (FDR)","COCKPIT VOICE (CVR)"];
+let nw=-1;
+const fx=c=>{const f=$('fx');f.className='';void f.offsetWidth;f.className=c;setTimeout(()=>f.className='',1100)};
+const shk=e=>{e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake')};
+const typ=(el,m)=>{el.textContent='';let i=0;const t=setInterval(()=>{el.textContent=m.slice(0,++i);if(i>=m.length)clearInterval(t)},40)};
+function r1(){const n=S.w.filter(Boolean).length;$('pb').style.width=n*100/3+'%';$('pt').textContent='Recovery '+Math.round(n*100/3)+'%';
+$('go').className=n==3?'':'hide';$('mods').innerHTML='';
+N.forEach((nm,i)=>{const done=!!S.w[i],lock=i>0&&!S.w[i-1],d=document.createElement('div');d.className='mod '+(done?'ok'+(i===nw?' new':''):lock?'lock':'');
+d.innerHTML=`<b>MODULE ${i+1} · ${nm}</b> <span class=dim>${done?'ONLINE':lock?'LOCKED':'OFFLINE'}</span>`+(done||lock?'':`<input id="i${i}" autocomplete="off" placeholder="ENTER WORD"><button>VERIFY</button><div class=err></div>`);
+$('mods').append(d);if(!done&&!lock){const b=d.querySelector('button'),inp=d.querySelector('input'),er=d.querySelector('.err');
+const go=async()=>{const v=inp.value.trim().toLowerCase();if(v&&await hx(v,D.w[i].s)===D.w[i].h){S.w[i]=v;save();nw=i;fx('good');er.style.color='var(--fg)';er.textContent='SIGNAL ACCEPTED';setTimeout(r1,850)}else{er.style.color='';er.textContent='CHECKSUM ERROR';shk(d);fx('bad')}};
+b.onclick=go;inp.onkeydown=e=>{if(e.key=='Enter')go()}}})}
+async function r2(){const t=$('t');t.textContent='';if(S.w.some(x=>!x)){location.hash='#terminal';return}
+try{t.innerHTML=await open(S.w.join('|'),D.ps,D.pi,D.pc)}catch(e){S.w=[null,null,null];save();location.hash='#terminal';return}
+$('af').className='';if(S.a)fin(S.a,true)}
+async function fin(a,q){try{const m=await open(a,D.fs,D.fi,D.fc);S.a=a;save();$('fin').className='card';$('rs').className='';if(q)$('fin').textContent=m;else{fx('good');typ($('fin'),m)}$('ae').textContent=''}catch(e){if(!q){$('ae').textContent='NO MATCH. SIGNAL STILL LOST.';shk($('af'));fx('bad')}}}
+$('ab').onclick=()=>fin($('ai').value.toUpperCase().replace(/[^A-Z0-9]/g,''));
+let rc=0;$('rb').onclick=()=>{const b=$('rb');if(!rc){rc=1;b.textContent='TAP AGAIN TO ERASE ALL PROGRESS';setTimeout(()=>{rc=0;b.textContent='RESET PUZZLE'},4000);return}rc=0;b.textContent='RESET PUZZLE';S={w:[null,null,null],a:null};try{localStorage.removeItem('bb_ls417')}catch(e){}$('ai').value='';$('fin').className='card hide';$('rs').className='hide';$('af').className='hide';$('ae').textContent='';location.hash='#terminal';route()};
+function route(){nw=-1;const two=location.hash=='#transcript';$('v1').className=two?'hide':'';$('v2').className=two?'':'hide';two?r2():r1()}
+addEventListener('hashchange',route);route();
+</script></body></html>
